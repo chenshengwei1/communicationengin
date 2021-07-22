@@ -1,0 +1,28 @@
+.hlds-table--fixed-width {
+    min-width: 3rem
+}
+
+.hlds-table--fixed-width .hlds-table {
+    table-layout: auto
+}
+
+
+.hlds-grow-fixed {
+    width: 0;
+    -ms-flex-positive: 1;
+    flex-grow: 1
+}
+
+
+.hlds-grid {
+    display: -ms-flexbox;
+    display: flex
+}
+
+.hlds-email-recipient--backgroud{
+    background-color: antiquewhite;
+}
+
+.readonlyborder .slds-input[readonly] {
+    background-color: var(--sds-c-input-color-background, var(--lwc-colorBackgroundInput,rgb(255, 255, 255)));
+}

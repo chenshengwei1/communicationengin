@@ -1,0 +1,26 @@
+<template>
+    <div class="slds-m-top_xx-small slds-p-around_small hlds-email-recipient--backgroud">
+
+        <div class="slds-grid" if:true={recipient}>
+            <div class="slds-col readonlyborder">
+                <lightning-input variant="label-hidden" type="email" name="email1" value={email} label="Email field with predefined value" onchange={handleChangeEmail} readonly={emailReadonly}>
+                </lightning-input>
+            </div>
+            <div class="slds-col slds-grow-none">
+                <lightning-button-group>
+                    <lightning-button-icon icon-name="utility:adduser" size="medium" variant="border-filled"  onclick={addContact}></lightning-button-icon>
+                    <lightning-button-icon icon-name="utility:close" size="medium" variant="border-filled" onclick={closeAddRecipient} ></lightning-button-icon>
+                </lightning-button-group>
+            </div>
+        </div>
+        <div if:true={contactOpen} class="slds-m-top_xx-small">
+            <div if:true={newContactPerson} class="slds-m-top_xx-small"> 
+                <c-email-person-point-new onchangecontactinfo={handleNewContact}></c-email-person-point-new>
+            </div>
+            <div if:false={newContactPerson} class="slds-m-top_xx-small">
+                <c-email-person-point-edit contact-person={selectedRecipient} onchangecontactinfo={handleChangeContactInfo} onchangecontact={handleContact}></c-email-person-point-edit>
+            </div>
+            
+        </div>
+    </div>
+</template>

@@ -1,0 +1,141 @@
+<template>
+    <template if:true={error}>
+        <p>{error}</p>
+    </template>
+    <lightning-tabset variant="scoped">
+        <lightning-tab label="Send Email">
+            <div>
+                <lightning-layout  multiple-rows="true" class="ce-m-top_small">
+                    <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12" class="slds-m-top_small">
+                        <lightning-button-group>
+                            <!-- sldsValidatorIgnoreNextLine -->
+                            <lightning-button-icon alternative-text="Insert Template" icon-name="utility:insert_template" size="large" variant="border-filled" onclick={handleInsertTemplate} ></lightning-button-icon>
+                        </lightning-button-group>
+                    </lightning-layout-item>
+                    <lightning-layout-item flexibility="grow" size="12" small-device-size="12" medium-device-size="3" large-device-size="12">
+                        <lightning-combobox name="sender" label="From" variant="label" required="true"
+                                    options={currentTeams} placeholder="Select an Sender" value={selectedFromContactId}
+                                    onchange={onSendEmailFromChange}>
+                        </lightning-combobox>
+                    </lightning-layout-item>
+                    <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12" class="slds-form-element_edit">
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                            <div class="slds-col">
+                              <!-- <lightning-combobox name="recipients" label="To" variant="label"  required="true"
+                                    options={contacts} placeholder="Select some recipients" value={selectedToContactId}
+                                    onchange={onSendEmailToChange}
+                                    class="slds-form-element__static">
+                                </lightning-combobox> -->
+
+                                <div class="slds-m-top_xxx-small">
+                                    <c-email-multiselect-option
+                                        data-type="inputField"
+                                        data-field-name='Purpose__c'
+                                        data-id="purposeContact"
+                                        name="recipients"
+                                        values={recipientcontacts}
+                                        options={contacts}
+                                        onpurposecontactchange={handlePurposeOfContactChange}
+                                        label="To"
+                                        readonly="true"
+                                        is-show-selected-value="true">
+                                    </c-email-multiselect-option>
+                                </div>
+
+                            </div>
+                            <div class="slds-col slds-grow-none">
+                                <div style="height: 22px; width: 1px;"></div>
+                                <lightning-button label="+Recipient" onclick={addRecipient}>
+                                </lightning-button>
+                            </div>
+                        </div>
+                    </lightning-layout-item>
+                    <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12" class="ce-email-recipient">
+
+                        <lightning-layout multiple-rows="true">
+                            <template for:each={recipients} for:item="recipient">
+                                <lightning-layout-item key={recipient.id}  size="12" small-device-size="12" medium-device-size="3" large-device-size="12" class="ce_email-ecipient_item">
+                                    <c-email-recipient recipient={recipient} oncancelrepient={closeAddRecipient} onchangecontact={changeContact}
+                                    data-id={recipient.id}></c-email-recipient>
+
+                                </lightning-layout-item>
+                            </template>
+                        </lightning-layout>
+                    </lightning-layout-item>
+
+                    <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12" class="ce-email-cc__button">
+                        <a onclick={onClickCC} class="ce_email_underline slds-p-right_medium" if:false={showcc}>CC</a>
+                        <a onclick={onClickBCC} class="ce_email_underline" if:false={showbcc}>BCC</a>
+                    </lightning-layout-item>
+                    <template if:true={showcc}>
+                        <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12">
+                            <lightning-input name="instructor3" label="CC" value={ccemail} onchange={changeCcemail}></lightning-input>
+                        </lightning-layout-item>
+                    </template>
+                    <template if:true={showbcc}>
+                        <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12">
+                            <lightning-input name="instructor3" label="BCC" value={bccemail} onchange={changeBccemail}></lightning-input>
+                        </lightning-layout-item>
+                    </template>
+                    <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12">
+                        <lightning-combobox name="nature" label="Nature" value={emailNature} onchange={changeNature}
+                        options={natures} placeholder="Select an Nature"></lightning-combobox>
+                    </lightning-layout-item>
+                    <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12">
+                        <lightning-input name="subject" label="Subject" value={emailSubject} onchange={onSubjectChange}></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12">
+                        <lightning-input-rich-text label="htmlbody" value={emailHtmlbody} placeholder="Type something interesting" onchange={onDescriptionChange}></lightning-input-rich-text>
+                    </lightning-layout-item>
+                    <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12">
+                        <lightning-input name="file1" type="file" label="Upload Files" multiple="true" accept={acceptfile} onchange={handleFilesChange}></lightning-input>
+                        <template if:true={showAttachmentPill}>
+                            <lightning-pill-container items={attachmentPillItems} onitemremove={handleFileItemRemove}>
+                            </lightning-pill-container>
+                        </template>
+                    </lightning-layout-item>
+                    <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12">
+                        <lightning-input type="checkbox" label="Sensitive" name="sensitive" value={sensitive} onchange={onChangeSensitive}></lightning-input>
+
+                    </lightning-layout-item>
+
+                    <!-- add new delivery-->
+                    <lightning-layout-item padding="around-small" size="12">
+                        <div class="slds-grid bottomBar">
+                            <div class="bottomBarRight slds-col--bump-left">
+                                <lightning-button-group>
+                                    <lightning-button label="Cancel" onclick={cancel}>
+                                    </lightning-button>
+                                    <lightning-button label="Preview" variant="brand" onclick={handlePreview}>
+                                    </lightning-button>
+                                </lightning-button-group>
+                            </div>
+                        </div>
+                    </lightning-layout-item>
+                </lightning-layout>
+            </div>
+        </lightning-tab>
+    </lightning-tabset>
+
+    <div>
+        <!-- <div>{previewinfo}</div> -->
+        <c-email-preview
+            modal-heading='Preview Email'
+            show-modal={showPreview}
+            name="previewModal"
+            email-content={emailContent}
+            onclickclose={handleSendEmail}>
+        </c-email-preview>
+
+    </div>
+    <div >
+        <!-- <div>{previewinfo}</div> -->
+        <c-email-template-select
+            modal-heading='Insert Email Template'
+            show-modal={showEmailTemplate}
+            name="templateSelectModal"
+            onclickclose={handleTemplateSelectClose}>
+        </c-email-template-select>
+
+    </div>
+</template>

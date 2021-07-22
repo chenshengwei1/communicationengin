@@ -1,0 +1,32 @@
+.listbox{
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.setCursor:hover{
+    cursor: pointer;
+    background-color: lightgray;
+}
+
+.emptyBlock{
+    width: 22px;
+    display: inline-block;
+}
+
+.inputSelected{
+    cursor: pointer;
+    caret-color: transparent;
+}
+
+.setLayer{
+    z-index: 1;
+}
+
+.slds-input__icon{
+    top: 1rem;
+}
+
+.box-color{
+    background-color: rgb(236, 235, 234) !important;
+    -webkit-text-fill-color: #000 !important;
+}

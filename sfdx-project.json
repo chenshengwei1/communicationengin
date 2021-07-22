@@ -1,0 +1,12 @@
+{
+  "packageDirectories": [
+    {
+      "path": "force-app",
+      "default": true
+    }
+  ],
+  "name": "communicationengin",
+  "namespace": "",
+  "sfdcLoginUrl": "https://here2serve--devpre1av2.my.salesforce.com",
+  "sourceApiVersion": "52.0"
+}

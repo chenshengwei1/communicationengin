@@ -1,0 +1,68 @@
+<template>
+    <div class="slds-form-element">
+        <div class="slds-form-element__control">
+            <div class="slds-combobox_container">
+                <label class={computedLabelClass}>
+                    <abbr class="slds-required"  if:false={required}>*</abbr>{label}
+                </label>
+                <div class="slds-combobox slds-dropdown-trigger slds-dropdown-trigger_click slds-is-open"
+                    aria-expanded="true" aria-haspopup="dialog" role="combobox">
+                    <div class="slds-input-has-icon slds-input-has-icon_right" role="none">
+                        <!-- <input onblur={handleFocusChange} type="text" class="slds-input slds-combobox__input inputSelected" id="combobox-id-470"
+                            aria-controls="popover-unique-id-234" autocomplete="off" role="textbox" data-id="comboboxInputId"
+                            placeholder={placeholder} readonly="" onclick={handleMultiselect} onkeypress={blockKeyPres}
+                            value={inputValues} onkeydown={blockKeyPres}/> -->
+                        <lightning-input class="box-color" onblur={handleFocusChange}
+                        variant="label-hidden"
+                        aria-controls="popover-unique-id-234" data-id="comboboxInputId"
+                        placeholder={placeholder} onclick={handleMultiselect} onkeypress={blockKeyPres}
+                        value={inputValues} onkeydown={blockKeyPres} disabled={disabled} readonly={readonly}
+                        required={required}>
+                            
+                        </lightning-input>
+                        <span onclick={handleMultiselect} class="slds-input__icon slds-input__icon_right">
+                            <template if:true={isOpen}>
+                                <lightning-icon size="x-small" icon-name="utility:close"></lightning-icon>
+                            </template>
+                            <template if:false={isOpen}>
+                                <lightning-icon size="x-small" icon-name="utility:down"></lightning-icon>
+                            </template>
+                            <!-- <svg class="slds-icon slds-icon slds-icon_x-small slds-icon-text-default"
+                                aria-hidden="true">
+                                <template if:true={isOpen}>
+                                    <use xlink:href="/apexpages/slds/latest/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
+                                </template>
+                                <template if:false={isOpen}>
+                                    <use xlink:href="/apexpages/slds/latest/assets/icons/utility-sprite/svg/symbols.svg#down"></use>
+                                </template>
+                            </svg> -->
+                        </span>
+                    </div>
+                    <section onmouseenter={hanldeMouseIn} onmouseleave={handleMouseOut} aria-describedby="dialog-body-id-25" aria-label={placeholder}
+                        class="slds-popover slds-popover_full-width slds-hide slds-dropdown"
+                         id="popover-unique-id-234" role="dialog" data-id="sectionId">
+                        <div class="slds-popover__body slds-popover__body_small" id="dialog-body-id-987">
+                            <fieldset class="slds-form-element">
+                                <div class="slds-form-element__control">
+                                    <template for:each={options} for:item="option">
+                                        <div class="slds-checkbox listbox setCursor" key={option.value} onclick={handleChange} data-value={option.value}>
+                                            <template if:true={option.selected}>
+                                                <lightning-icon class="slds-p-right--xx-small slds-p-left--xx-small" icon-name="utility:check" alternative-text="Check" title="Check" size="xx-small"></lightning-icon>
+                                            </template>
+                                            <template if:false={option.selected}>
+                                                <div class="emptyBlock"></div>
+                                            </template>
+                                            <label class="slds-checkbox__label setCursor" >
+                                                <span class="slds-form-element__label">{option.label}</span>
+                                            </label>
+                                        </div>
+                                    </template>
+                                </div>
+                            </fieldset>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

@@ -1,0 +1,53 @@
+<template>
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+    </template>
+    <div class="slds-grid slds-grid_vertical-align-center">
+        <div class="slds-col slds-grow-none slds-p-around_xx-small">
+            <lightning-icon size="xx-small"  icon-name="utility:chevrondown" if:true={expand} onclick={changeExpand}></lightning-icon>
+            <lightning-icon size="xx-small"  icon-name="utility:chevronright" if:false={expand} onclick={changeExpand}></lightning-icon>
+            <span>New Contact Person</span>
+        </div>
+        <div class="slds-col">
+            <lightning-base-combobox input-text={editContactPerson.Salutation} items={sexitems} 
+            name="test"
+            onselect={selectSalutation}></lightning-base-combobox>
+        </div>
+        <div class="slds-col">
+            <lightning-input variant="label-hidden" type="text" required="true" name="email1" value={editContactPerson.LastName} label="Purpose of Contact" onchange={changeLastName}>
+            </lightning-input>
+        </div>
+    </div>
+
+    <lightning-layout if:true={_expand} multiple-rows="true" class="slds-m-left_small">
+        <lightning-layout-item size="12">
+            <lightning-input type="text" required="true" name="firstname" value={editContactPerson.FirstName} label="First Name" onchange={changeFirstName}>
+            </lightning-input>
+        </lightning-layout-item>
+        <lightning-layout-item size="12">
+            <lightning-input type="text" required="true" name="email1" value={editContactPerson.Purpose} label="Purpose of Contact" onchange={changePurpose}>
+            </lightning-input>
+            <div if:true={selectedPurposeItems}>
+                <lightning-pill-container items={selectedPurposeItems} onitemremove={handlePurposeItemRemove}></lightning-pill-container>
+            </div>
+        </lightning-layout-item>
+        <lightning-layout-item size="12">
+            <lightning-input type="text" name="text" value={editContactPerson.Lob} label="LOB" onchange={changeLOB}>
+            </lightning-input>
+            <div if:true={selectedLobItems}> 
+                <lightning-pill-container items={selectedLobItems} onitemremove={handleLobItemRemove}></lightning-pill-container>
+            </div>
+            
+        </lightning-layout-item>
+        <lightning-layout-item size="12"  class="slds-p-around_x-small">
+            <div class="slds-grid bottomBar">
+                <div class="bottomBarRight slds-col--bump-left">
+                    <lightning-button-group>
+                        <lightning-button label="Cancel" name="cancel" onclick={handleButtonClick}></lightning-button>
+                        <lightning-button variant="brand" name="ok" label="Submit" onclick={handleButtonClick} disabled={allowSubmit}></lightning-button>
+                    </lightning-button-group>
+                </div>
+            </div>
+        </lightning-layout-item>
+    </lightning-layout>
+</template>

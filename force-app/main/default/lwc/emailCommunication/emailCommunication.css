@@ -1,0 +1,15 @@
+.ce_email_underline{
+    text-decoration:underline
+} 
+
+.ce-m-top_small lightning-layout-item{
+    margin-top: var(--lwc-spacingSmall,0.75rem);
+}
+
+.ce-email-recipient{
+    margin-top: 0;
+}
+
+lightning-layout:has(slot:empty){
+    display:none;
+}

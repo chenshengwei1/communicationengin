@@ -1,0 +1,10 @@
+.previewblock {
+    position: absolute;
+    width: 800px;
+    top: 21px;
+    left: 300px;
+    z-index: 99999;
+    border-width: 2px;
+    border-style: double;
+    margin: 1rem;
+}

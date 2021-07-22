@@ -1,0 +1,26 @@
+<template>
+    <div class="slds-m-bottom_small">
+        <lightning-card title="Filter What" icon-name="utility:search" variant="Narrow">
+            <lightning-layout horizontal-align="center">
+                <lightning-layout-item padding="around-small" size="4">
+                    <lightning-combobox name="instructor" label="Related To"
+                        options={whatItems} value={apiName}
+                        onchange={onWhatChange}>
+                    </lightning-combobox>
+                </lightning-layout-item>
+                <lightning-layout-item padding="around-small" size="4">
+                    <lightning-combobox name="deliverySelector" label="Select a Person"
+                        value={whoId} options={whoItems}
+                        onchange={onWhoChange}></lightning-combobox>
+                </lightning-layout-item>
+
+                <!-- add new delivery-->
+                <lightning-layout-item padding="around-small" size="4">
+                    <lightning-button label="Add New Delivery" variant="brand">
+                    </lightning-button>
+                </lightning-layout-item>
+            </lightning-layout>
+        </lightning-card>
+    </div>
+    <c-email-communication what-id={whatId} who-id={whoId} onuploadfile={handleUploadFile}></c-email-communication>
+</template>

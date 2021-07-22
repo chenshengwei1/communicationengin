@@ -1,0 +1,114 @@
+<template>
+    <template if:true={showModal}>
+        <!-- Modal/Popup Box LWC starts here -->
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open slds-modal_medium">
+            <div class="slds-modal__container">
+                <!-- Modal/Popup Box LWC header here -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeModal}>
+                        <lightning-icon icon-name="utility:close"
+                            alternative-text="close"
+                            variant="inverse"
+                            size="small" ></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">{modalHeading}</h2>
+                </header>
+                <!-- Modal/Popup Box LWC body starts here -->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <div if:true={emailContent}>
+                        <ul class="slds-has-dividers_top-space">
+                            <!-- <template for:each={displayItems} for:item="item">
+                                <li class="slds-item" key={item.label}>
+                                    <dl class="slds-list_horizontal slds-wrap">
+                                        <dt class="slds-item_label slds-text-color_weak slds-truncate" title={item.label}>{item.label}:</dt>
+                                        <dd class="slds-item_detail slds-truncate">
+                                            {item.value}{item.values}
+                                        </dd>
+                                    </dl>
+                                </li>
+                            </template> -->
+                            
+                            <li class="slds-item no-top-line">
+                                <dl class="slds-list_horizontal slds-wrap">
+                                    <dt class="slds-item_label slds-text-color_weak slds-truncate" title="From">From:</dt>
+                                    <dd class="slds-item_detail slds-truncate">{from}</dd>
+
+                                    <dt class="slds-item_label slds-text-color_weak slds-truncate" title="To">To:</dt>
+                                    <dd class="slds-item_detail slds-truncate">
+                                        <template for:each={toAddrs} for:item="to">
+                                            <div key={to.name}>{to.label}</div>
+                                        </template>
+                                    </dd>
+
+                                    <dt class="slds-item_label slds-text-color_weak slds-truncate" title="CC">CC:</dt>
+                                    <dd class="slds-item_detail slds-truncate">
+                                        <template for:each={ccAddrs} for:item="cc">
+                                            <div key={cc.name}>{cc.label}</div>
+                                        </template>
+                                    </dd>
+
+                                    <dt class="slds-item_label slds-text-color_weak slds-truncate" title="BCC">BCC:</dt>
+                                    <dd class="slds-item_detail slds-truncate">
+                                        <template for:each={bccAddrs} for:item="bcc">
+                                            <div key={bcc.name}>{bcc.label}</div>
+                                        </template>
+                                    </dd>
+                                </dl>
+                            </li>
+                            <li class="slds-item" if:true={nature}>
+                                <dl class="slds-list_horizontal slds-wrap">
+                                    <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Sensitive">Nature:</dt>
+                                    <dd class="slds-item_detail slds-truncate">
+                                        {nature}
+                                    </dd>
+                                </dl>
+                            </li>
+                            <li class="slds-item" if:true={subject}>
+                                <dl class="slds-list_horizontal slds-wrap">
+                                    <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Sensitive">Subject:</dt>
+                                    <dd class="slds-item_detail slds-truncate">
+                                        {subject}
+                                    </dd>
+                                </dl>
+                            </li>
+                            <li class="slds-item" if:true={htmlBody}>
+                                <dl class="slds-list_horizontal slds-wrap">
+                                    <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Sensitive">Body Message:</dt>
+                                    <dd class="slds-item_detail slds-truncate">
+                                        
+                                        <lightning-formatted-rich-text value={htmlBody}></lightning-formatted-rich-text>
+                                    </dd>
+                                </dl>
+                            </li>
+                            <li class="slds-item" if:true={sensitive}>
+                                <dl class="slds-list_horizontal slds-wrap">
+                                    <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Sensitive">Sensitive:</dt>
+                                    <dd class="slds-item_detail slds-truncate">
+                                        {sensitive}
+                                    </dd>
+                                </dl>
+                            </li>
+                            <li class="slds-item" if:true={attachmentPillItems}>
+                                <dl class="slds-list_horizontal slds-wrap">
+                                    <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Attachment">Attachment:</dt>
+                                    <dd class="slds-item_detail slds-truncate">
+                                        <lightning-pill-container items={attachmentPillItems}>
+                                        </lightning-pill-container>
+                                    </dd>
+                                </dl>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- Modal/Popup Box LWC footer starts here -->
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" name="cancel" onclick={handleClick} title="Cancel">Cancel</button>
+                    <button class="slds-button slds-button_brand" name="ok" onclick={handleClick} title="Send">Send</button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+</template>
