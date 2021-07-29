@@ -4,8 +4,8 @@
     </template>
     <div class="slds-grid slds-grid_vertical-align-center">
         <div class="slds-col slds-grow-none slds-p-around_xx-small">
-            <lightning-icon size="xx-small"  icon-name="utility:chevrondown" if:true={expand} onclick={changeExpand}></lightning-icon>
-            <lightning-icon size="xx-small"  icon-name="utility:chevronright" if:false={expand} onclick={changeExpand}></lightning-icon>
+            <lightning-icon size="xx-small"  icon-name="utility:chevrondown" if:true={_expand} onclick={changeExpand}></lightning-icon>
+            <lightning-icon size="xx-small"  icon-name="utility:chevronright" if:false={_expand} onclick={changeExpand}></lightning-icon>
             <span>New Contact Person</span>
         </div>
         <div class="slds-col">
@@ -44,7 +44,7 @@
                 <div class="bottomBarRight slds-col--bump-left">
                     <lightning-button-group>
                         <lightning-button label="Cancel" name="cancel" onclick={handleButtonClick}></lightning-button>
-                        <lightning-button variant="brand" name="ok" label="Submit" onclick={handleButtonClick} disabled={allowSubmit}></lightning-button>
+                        <lightning-button variant="brand" name="ok" label="Submit" onclick={handleButtonClick} disabled={disableSubmitBtn}></lightning-button>
                     </lightning-button-group>
                 </div>
             </div>

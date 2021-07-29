@@ -2,7 +2,7 @@
     text-decoration:underline
 } 
 
-.ce-m-top_small lightning-layout-item{
+.ce-m-top_small lightning-layout-item:not(.ce_email-ecipient_item,.ce-email-recipient){
     margin-top: var(--lwc-spacingSmall,0.75rem);
 }
 

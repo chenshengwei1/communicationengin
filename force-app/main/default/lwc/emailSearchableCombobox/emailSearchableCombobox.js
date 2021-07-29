@@ -1,18 +1,23 @@
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track,wire } from 'lwc';
 
-export default class EmailMultiselectOption extends LightningElement {
+
+
+export default class EmailSearchableCombobox extends LightningElement {
+
     // Default PlaceHolder Text
     @api placeholder;
 
     @api disabled;
 
-    @api readonly = false;
+    @api readonly = !1;
 
     @api name;
 
     @api label;
 
     @api required;
+
+    multiple = false;
 
     // Select Option List
     // e.g. [{ label: 'abc', value: 'abc'}]
@@ -24,7 +29,7 @@ export default class EmailMultiselectOption extends LightningElement {
     set options(value){
         this.picklistOption = JSON.parse(JSON.stringify(value));
         console.log(this.picklistOption);
-        this.setSelectedValueToInputBox();
+        //this.setSelectedValueToInputBox();
     }
 
     // To control Display Selected Checkbox value in the box
@@ -66,6 +71,8 @@ export default class EmailMultiselectOption extends LightningElement {
     inputValues = '';
     isFireBlur = true;
 
+    __isFocusFlag = false;
+
     get computedLabelClass(){
         return '';
     }
@@ -74,14 +81,21 @@ export default class EmailMultiselectOption extends LightningElement {
         this.selectCheckboxDefaultInputValues();
     }
 
-   
-
     selectCheckboxDefaultInputValues(){
         for(let item of this.picklistOption){
             if(this.selectedValues.indexOf(item.value) != -1){
                 item.selected = true;
             }
         }
+    }
+
+    handleFocus(){
+        this.__isFocusFlag = true;
+    }
+    handleFocusChange(){
+        this.__isFocusFlag = false;
+        console.log('handleFocusChange');
+        this.closeSection();
     }
 
     handleChange(event){
@@ -93,7 +107,18 @@ export default class EmailMultiselectOption extends LightningElement {
 
         // If user select "All" option
         // Select or not select all option 
-        if ('All' == selectedValue){
+        if ('ShowMore' == selectedValue){
+            this.dispatchEvent(
+                new CustomEvent(
+                    'showmore',
+                    {
+                        detail: 'showmore'
+                    }
+                )
+            );
+            return;
+        }
+        else if ('All' == selectedValue){
             let selectedOption = this.options;
             if(selectedOption && selectedOption.length > 0){
                 for (let i = 0; i < selectedOption.length; i++){
@@ -115,14 +140,27 @@ export default class EmailMultiselectOption extends LightningElement {
             }
 
             allSelectedOption = pickListOption;
-        }else {
+        }else if (this.multiple){
             let selectedOption = this.options.filter((item)=>{
-                return item.value === selectedValue
+                if (item.checkable===false){
+                    return false;
+                }
+                return item.value === selectedValue;
             });
             if(selectedOption && selectedOption.length > 0){
                 selectedOption[0].selected = !selectedOption[0].selected;
             }
 
+            allSelectedOption = this.getSelectedPurposeContact();
+        }
+        else{
+            let selectedOption = this.options.find((item)=>{
+                if (item.checkable===false){
+                    return false;
+                }
+                return item.value === selectedValue;
+            });
+            this.options.forEach(e=>{e.selected=(selectedOption && selectedOption===e)});
             allSelectedOption = this.getSelectedPurposeContact();
         }
         this.selectedValues = allSelectedOption;
@@ -136,39 +174,73 @@ export default class EmailMultiselectOption extends LightningElement {
         if(this.isShowSelectedValue){
             this.inputValues = this.options.filter((item)=>{
                 return this.selectedValues.indexOf(item.value) != -1;
-            }).map(item=>{return item.label}).join(';');
+            }).map(item=>{return item.value}).join(';');
         }
     }
 
     handleMultiselect(){
-        if (!this.disabled){
-            let section = this.template.querySelector('[data-id="sectionId"]');
-            if(this.isOpen){
-                section.classList.add('slds-hide');
-                let dropdow = this.template.querySelector('.slds-dropdown');
-                dropdow.classList.remove('slds-dropdown_fluid');
-            }else{
-                section.classList.remove('slds-hide');
-                let dropdow = this.template.querySelector('.slds-dropdown');
-                dropdow.classList.add('slds-dropdown_fluid');
-            }
-            this.isOpen = !this.isOpen;
+        if(this.isOpen){
+            this.closeSection();
+        }else{
+            this.openSection();
         }
     }
 
     blockKeyPres(event){
-        event.preventDefault();
+        //event.preventDefault();
+        //this.inputValues = event.detail.value;
+        this.openSection();
+        this.dispatchEvent(
+            new CustomEvent(
+                'purposecontactchange',
+                {
+                    detail: {value:this.selectedValues}
+                }
+            )
+        );
     }
+
+    openSection(){
+        if (!this.disabled){
+            let section = this.template.querySelector('[data-id="sectionId"]');
+            section.classList.remove('slds-hide');
+            let dropdow = this.template.querySelector('.slds-dropdown');
+            dropdow.classList.add('slds-dropdown_fluid');
+            this.isOpen = true;
+            this.handleChangeInput({detail:{value:this.selectedValues[0]}});
+        }
+    }
+    closeSection(){
+        if (!this.disabled){
+            let section = this.template.querySelector('[data-id="sectionId"]');
+            section.classList.add('slds-hide');
+            let dropdow = this.template.querySelector('.slds-dropdown');
+                dropdow.classList.remove('slds-dropdown_fluid');
+            this.isOpen = false;
+        }
+    }
+
+    
+    handleChangeInput(event){
+        this.dispatchEvent(
+            new CustomEvent(
+                'inputchange',
+                {
+                    detail: {value:event.detail.value}
+                }
+            )
+        );
+    }
+
+   
+
 
     getSelectedPurposeContact(){
         let selectedValues = [];
 
-        for(let option of this.options){
-            if(option.selected && 'All' != option.value)
-            {
-                selectedValues.push(option.value);
-            }
-        }
+        selectedValues = this.options.filter((e)=>{
+            return e.checkable!==false && e.selected && 'All' != e.value;
+        }).map(e=>{return e.value});
 
         return selectedValues;
     }

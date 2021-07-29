@@ -1,7 +1,4 @@
 <template>
-    <template if:true={error}>
-        <p>{error}</p>
-    </template>
     <lightning-tabset variant="scoped">
         <lightning-tab label="Send Email">
             <div>
@@ -37,7 +34,7 @@
                                         options={contacts}
                                         onpurposecontactchange={handlePurposeOfContactChange}
                                         label="To"
-                                        readonly="true"
+                                        readonly="false"
                                         is-show-selected-value="true">
                                     </c-email-multiselect-option>
                                 </div>
@@ -50,31 +47,38 @@
                             </div>
                         </div>
                     </lightning-layout-item>
-                    <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12" class="ce-email-recipient">
+                    <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12" class="ce-email-recipient slds-hide">
 
                         <lightning-layout multiple-rows="true">
                             <template for:each={recipients} for:item="recipient">
                                 <lightning-layout-item key={recipient.id}  size="12" small-device-size="12" medium-device-size="3" large-device-size="12" class="ce_email-ecipient_item">
                                     <c-email-recipient recipient={recipient} oncancelrepient={closeAddRecipient} onchangecontact={changeContact}
                                     data-id={recipient.id}></c-email-recipient>
-
                                 </lightning-layout-item>
                             </template>
                         </lightning-layout>
                     </lightning-layout-item>
 
-                    <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12" class="ce-email-cc__button">
+                    <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12" class="ce-email-cc__button slds-hide">
                         <a onclick={onClickCC} class="ce_email_underline slds-p-right_medium" if:false={showcc}>CC</a>
                         <a onclick={onClickBCC} class="ce_email_underline" if:false={showbcc}>BCC</a>
                     </lightning-layout-item>
                     <template if:true={showcc}>
                         <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12">
-                            <lightning-input name="instructor3" label="CC" value={ccemail} onchange={changeCcemail}></lightning-input>
+                            <!-- <lightning-input name="instructor3" label="CC" value={ccemail} onchange={changeCcemail}></lightning-input> -->
+                            <c-email-recipient-input label="CC"
+                                oninputchange={changeCcemail}
+                                is-show-selected-value="true" 
+                                value={ccemail}></c-email-recipient-input>
                         </lightning-layout-item>
                     </template>
                     <template if:true={showbcc}>
                         <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12">
-                            <lightning-input name="instructor3" label="BCC" value={bccemail} onchange={changeBccemail}></lightning-input>
+                            <!-- <lightning-input name="instructor3" label="BCC" value={bccemail} onchange={changeBccemail}></lightning-input> -->
+                            <c-email-recipient-input label="BCC"
+                                oninputchange={changeBccemail}
+                                is-show-selected-value="true" 
+                                value={bccemail}></c-email-recipient-input>
                         </lightning-layout-item>
                     </template>
                     <lightning-layout-item flexibility="grow"  size="12" small-device-size="12" medium-device-size="3" large-device-size="12">
@@ -117,7 +121,7 @@
         </lightning-tab>
     </lightning-tabset>
 
-    <div>
+    <div if:true={showPreview}>
         <!-- <div>{previewinfo}</div> -->
         <c-email-preview
             modal-heading='Preview Email'
@@ -128,12 +132,13 @@
         </c-email-preview>
 
     </div>
-    <div >
+    <div if:true={showEmailTemplate}>
         <!-- <div>{previewinfo}</div> -->
         <c-email-template-select
             modal-heading='Insert Email Template'
             show-modal={showEmailTemplate}
             name="templateSelectModal"
+            folder-names={folderNames}
             onclickclose={handleTemplateSelectClose}>
         </c-email-template-select>
 

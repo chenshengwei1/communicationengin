@@ -131,7 +131,7 @@ export default class EmailPreview extends LightningElement {
         return this.emailContent && this.emailContent.personalizations&& this.emailContent.personalizations[0].toAddresses.length>0;
     }
     get showCCAddress(){
-        return this.emailContent && this.emailContent.personalizations&& this.emailContent.personalizations[0].ccAddress.length>0;
+        return this.emailContent && this.emailContent.personalizations&& this.emailContent.personalizations[0].ccAddresses.length>0;
     }
     get showBCCAddress(){
         return this.emailContent && this.emailContent.personalizations&& this.emailContent.personalizations[0].bccAddresses.length>0;
@@ -147,7 +147,7 @@ export default class EmailPreview extends LightningElement {
         })
     }
     get ccAddrs(){
-        if(!this.emailContent.personalizations || !this.emailContent.personalizations[0].ccAddress){
+        if(!this.emailContent.personalizations || !this.emailContent.personalizations[0].ccAddresses){
             return [];
         }
         let ccAddresses = this.emailContent.personalizations[0].ccAddresses;

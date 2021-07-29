@@ -31,3 +31,6 @@
     -webkit-text-fill-color: #000 !important;
 }
 
+.hide_for_no_item{
+    display:none !important;
+}

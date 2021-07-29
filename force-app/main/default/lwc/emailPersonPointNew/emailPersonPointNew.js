@@ -4,6 +4,7 @@ import CONTACT_OBJECT from '@salesforce/schema/Contact';
 import { getPicklistValues } from 'lightning/uiObjectInfoApi';
 import getPicklist from '@salesforce/apex/EmailCommunicationController.getPicklist';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { updateRecord } from 'lightning/uiRecordApi';
 
 import FIELD_ID from '@salesforce/schema/Contact.Id';
 import FIELD_Name from '@salesforce/schema/Contact.Name';
@@ -18,7 +19,7 @@ export default class EmailPersonPointNew extends LightningElement {
     isLoading = false;
 
     @track
-    editContactPerson = {text:'Mr. Ng, Stanley', 
+    editContactPerson = {text:'', 
                     value:'1', 
                     id:'1', 
                     type:"option-inline",
@@ -30,15 +31,17 @@ export default class EmailPersonPointNew extends LightningElement {
 
     sexitems = [];
 
-    selectedPurposeItems = [];
+    selectedPurposeItems;
 
-    selectedLobItems =  [];
+    selectedLobItems;
 
-
-    _expand = false;
+    @track
+    _expand = true;
     detail = false;
 
     recordId;
+
+    newEmail;
     
     @wire(getPicklist, {objName:CONTACT_OBJECT.objectApiName, fieldName:FIELD_Salutation.fieldApiName})
     wire_getPicklist({error, data}){
@@ -53,9 +56,6 @@ export default class EmailPersonPointNew extends LightningElement {
             console.error(error);
         }
     }
-
-    //@wire(getPicklistValues, { recordTypeId: '012000000000000AAA', fieldApiName: INDUSTRY_FIELD })
-    propertyOrFunction;
 
     @wire(getRecordCreateDefaults, { objectApiName: CONTACT_OBJECT })
     contactCreateDefaults;
@@ -76,8 +76,13 @@ export default class EmailPersonPointNew extends LightningElement {
         return recordInput;
     }
 
+    @api
+    getContactPerson(){
+        return this.editContactPerson;
+    }
+
     changeExpand(){
-        this._expand =!this._expand;
+        //this._expand =!this._expand;
     }
 
     changePurpose(event){
@@ -147,14 +152,15 @@ export default class EmailPersonPointNew extends LightningElement {
         
     }
 
-    get allowSubmit(){
-        return !this.editContactPerson.purpose;
+    get disableSubmitBtn(){
+        return !this.editContactPerson.purpose || !this.editContactPerson.FirstName || !this.newEmail;
     }
 
     handleButtonClick(event){
         event.preventDefault();
         const fields = {};
         let name = event.target.name;
+        this._expand = false;
         if (name=='ok'){
             this.isLoading = true;
             const allValid = [...this.template.querySelectorAll('lightning-input')]
@@ -165,7 +171,10 @@ export default class EmailPersonPointNew extends LightningElement {
 
             fields[FIELD_FirstName.fieldApiName] = this.editContactPerson.FirstName;
             fields[FIELD_LastName.fieldApiName] = this.editContactPerson.LastName;
-            fields[FIELD_Salutation.fieldApiName] = this.editContactPerson.LastName;
+            fields[FIELD_Salutation.fieldApiName] = this.editContactPerson.Salutation;
+            if(this.newEmail){
+                fields[FIELD_Email] = this.newEmail;
+            }
             // fields[FIELD_Lob.fieldApiName] = this.editContactPerson.Lob;
             // fields[FIELD_Purpose.fieldApiName] = this.editContactPerson.Purpose;
 
@@ -186,19 +195,6 @@ export default class EmailPersonPointNew extends LightningElement {
                 })
                 .catch(error => this.errorHandler(error, this));
             }
-
-            // let recordInput = this.recordInputForCreate;
-            
-            // //recordInput.fields[FIELD_FirstName.fieldApiName] = {value:this.editContactPerson.FirstName};
-            // createRecord(recordInput).then(e=>{
-            //     console.log('after create record' +JSON.stringify(e));
-            //     this.udpateFields(e).then(e=>{
-                   
-            //     })
-            // }).catch(e=>{
-            //     this.error = e;
-            //     console.error(e);
-            // })
         }else{
             this.dispatchEvent(new CustomEvent('changecontactinfo', {
                 bubbles: true,

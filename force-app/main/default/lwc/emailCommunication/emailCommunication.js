@@ -2,16 +2,21 @@ import { LightningElement, api, wire, track } from 'lwc';
 import id from '@salesforce/user/Id';
 import { getRecord, getFieldValue, getFieldDisplayValue} from 'lightning/uiRecordApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { getListUi } from 'lightning/uiListApi';
+
 
 import getTemplateDetails from '@salesforce/apex/EmailCommunicationController.getTemplateDetails';
 import sendEmail from '@salesforce/apex/ce_EmailController.sendEmail';
+import upload from '@salesforce/apex/ce_DmsAttachmentController.upload';
+import download from '@salesforce/apex/ce_DmsAttachmentController.download';
 
 
+
+import CONTACT_OBJECT from '@salesforce/schema/Contact';
 import FIELD_Name from '@salesforce/schema/Contact.Name';
-import FIELD_Description from '@salesforce/schema/Contact.Description';
 import FIELD_Email from '@salesforce/schema/Contact.Email';
-import FIELD_Phone from '@salesforce/schema/Contact.Phone';
 import FIELD_Id from '@salesforce/schema/Contact.Id';
+import FIELD_ACCOUNT_ID from '@salesforce/schema/Contact.Account.Id';
 
 import USER_NAME_FIELD from '@salesforce/schema/User.Name';
 import USER_EMAIL_FIELD from '@salesforce/schema/User.Email';
@@ -19,16 +24,27 @@ import USER_ID_FIELD from '@salesforce/schema/User.Id';
 import USER_CONTACT_FIELD from '@salesforce/schema/User.Contact.Name';
 
 
-
-const fields = [FIELD_Id, FIELD_Name, FIELD_Description, FIELD_Email, FIELD_Phone].map(f=>{return f.fieldApiName});
-
 const userfields = [USER_NAME_FIELD, USER_EMAIL_FIELD, USER_ID_FIELD, USER_CONTACT_FIELD];
 
 const natureItems = [{value:'Enquiry', label:'Enquiry'},{value:'Survey', label:'Survey'},{value:'Invoice', label:'Invoice'},{value:'Campaign', label:'Campaign'}];
 
-const FILE_TYPE = ['PDF','PNG'];
+const FILE_TYPE = ['PDF','PNG','JPEG'];
 
-const MAX_FILE_SIZE = 30*1024*1024;
+const MAX_FILE_SIZE = 6*1024*1024;
+
+const MAX_FILE_NUMBER = 100;
+
+const MAX_SINGLE_FILE_SIZE = 6*1024*1024;
+
+const CC_BCC_DOMAIN = ['hkt.com', 'pccw.com', 'hkcsl.com'];
+
+const MAX_SUBJECT_LENGTH = 2048;
+
+const MAX_HTMLBODY_LENGTH = 4096;
+
+const BUTTON_STATUS_OK = 'ok';
+
+const TOAST = {SUCCESS: {VARIANT: 'success', TITLE:'Success'}, ERROR: {VARIANT: 'error', TITLE:'Error'}};
 
 
 export default class EmailCommunication extends LightningElement {
@@ -37,7 +53,6 @@ export default class EmailCommunication extends LightningElement {
     contacts = [];
     currentTeams = [];
 
-    @track
     showPreview;
 
     @track
@@ -46,7 +61,7 @@ export default class EmailCommunication extends LightningElement {
     @track
     attachmentPillItems;
 
-    @track
+    
     showEmailTemplate;
 
     @api
@@ -74,6 +89,7 @@ export default class EmailCommunication extends LightningElement {
     @track emailHtmlbody = '';
 
     isButtonDisabled = true;
+    contactObjectData;
 
     @track showcc = false;
     @track showbcc = false;
@@ -84,14 +100,11 @@ export default class EmailCommunication extends LightningElement {
 
     @api whoId;
 
+   
+
     templateId;
 
-    attractList = [];
-
-    constructor(){
-        super();
-    }
-
+    attactmentList = [];
 
     @wire(getRecord, { recordId: '$userId', fields: userfields})
     wired_currentUser({error, data}){
@@ -110,6 +123,49 @@ export default class EmailCommunication extends LightningElement {
         }
     };
 
+    @wire(getListUi,{objectApiName: CONTACT_OBJECT.objectApiName,listViewApiName:'AllContacts',pageSize:1000})
+    wiredGetListUi({error,data}) {
+          this.contacts = [];
+          if(data) {
+             this.error = undefined;
+            if (data && data.records && data.records.records){
+                this.contactObjectData = data.records.records;
+                this.updateContactList(data.records.records);
+            }
+        } else if(error) {
+            this.error = error;
+            console.log(error);
+        }
+    }
+
+    updateContactList(contacts){
+        for(var s of contacts){
+            let itemAccountId = getFieldValue(s,FIELD_ACCOUNT_ID);
+            if (!itemAccountId){
+                continue;
+            }
+            if (this.accountRecordId){
+                if (this.accountRecordId !== itemAccountId){
+                    continue;
+                }
+            }
+            let email = getFieldValue(s, FIELD_Email);
+            if (email){
+                this.contacts.push({
+                    value:getFieldValue(s, FIELD_Id),
+                    label:this._getDisplayValue(s, FIELD_Name) ? this._getDisplayValue(s, FIELD_Name)+' <'+this._getDisplayValue(s, FIELD_Email) +'>':this._getDisplayValue(s, FIELD_Email),
+                    email:getFieldValue(s, FIELD_Email),
+                    name:getFieldValue(s, FIELD_Name)
+                })
+            }
+        }
+        this.contacts.sort((a,b)=>{
+            return String(a.label).localeCompare(String(b.label));
+        });
+
+        //this.recipientcontacts = this.contacts.map(e=>{return e.value});
+    }
+
     renderedCallback(){
         let section = this.template.querySelector('.ce-email-recipient');
         if(this.recipients.length == 0){
@@ -119,19 +175,34 @@ export default class EmailCommunication extends LightningElement {
         }
         
         let buttonlayoutItem = this.template.querySelector('.ce-email-cc__button');
-        if(!this.showcc && !this.showbcc){
-            buttonlayoutItem.classList.add('slds-hide');
-        }else{
-            buttonlayoutItem.classList.remove('slds-hide');
-        }
+        this.showcc && this.showbcc ? buttonlayoutItem.classList.add("slds-hide") : buttonlayoutItem.classList.remove("slds-hide");
     }
 
     handleError(error){
         this.error = 'Unknown error';
-        if (Array.isArray(error.body)) {
-            this.error = error.body.map(e => e.message).join(', ');
-        } else if (typeof error.body.message === 'string') {
-            this.error = error.body.message;
+        if (error.body){
+            if (Array.isArray(error.body)) {
+                this.error = error.body.map(e => e.message).join(', ');
+            } else if (typeof error.body.message === 'string') {
+                this.error = error.body.message;
+            }
+        }else if(error.error){
+            if (typeof error.error.message === 'string') {
+                this.error = error.error.message;
+            }
+        }
+    }
+
+    @api 
+    get accountRecordId(){
+        return this._accountRecordId;
+    }
+
+    set accountRecordId(value){
+        this._accountRecordId = value;
+        if (this._accountRecordId && this.contactObjectData){
+            this.contacts = [];
+            this.updateContactList(this.contactObjectData);
         }
     }
 
@@ -143,6 +214,21 @@ export default class EmailCommunication extends LightningElement {
         return FILE_TYPE.map(e=>{return '.' + e;}).join(',');
     }
 
+    set options(value){
+        if (value){
+            if (value.template){
+                this.folderNames = (value.template.filters||[]).map(f=>{
+                    return f.folderName;
+                })
+            }
+        }
+    }
+
+    @api
+    get options(){
+        return {};
+    }
+
     onSendEmailFromChange(event){
         this.selectedFromContactId = event.target.value;
     }
@@ -152,11 +238,11 @@ export default class EmailCommunication extends LightningElement {
     }
 
     changeCcemail(event){
-        this.ccemail = event.target.value;
+        this.ccemail = event.detail.value;
     }
 
     changeBccemail(event){
-        this.bccemail = event.target.value;
+        this.bccemail = event.detail.value;
     }
 
     onSubjectChange(event){
@@ -180,11 +266,12 @@ export default class EmailCommunication extends LightningElement {
     }
 
     handlePurposeOfContactChange(event){
+        this.recipientcontacts = event.detail.value;
         console.log(event.detail);
     }
 
     handleInsertTemplate(event){
-        console.log('Insert Template');
+        console.log('open Insert Template dialog');
         this.showEmailTemplate = true;
         
     }
@@ -198,26 +285,11 @@ export default class EmailCommunication extends LightningElement {
     updateRecipientInfos(){
         let contacts  = this.recipients.filter(e=>{
             let selector = this.template.querySelector(`[data-id="${e.id}"]`);
-            return selector && selector.recipient && getFieldValue(selector.recipient, FIELD_Email);
+            return selector && selector.recipient && selector.email;
         }).map(e=>{
             let selector = this.template.querySelector(`[data-id="${e.id}"]`);
             return selector.recipient;
         });
-
-        this.contacts = [];
-        for(var s of contacts){
-            this.contacts.push({
-                value:getFieldValue(s, FIELD_Id) || (Math.floor(Math.random()*1000)+''),
-                label:this._getDisplayValue(s, FIELD_Name) ? this._getDisplayValue(s, FIELD_Name)+' <'+this._getDisplayValue(s, FIELD_Email) +'>':this._getDisplayValue(s, FIELD_Email),
-                email:getFieldValue(s, FIELD_Email),
-                name:getFieldValue(s, FIELD_Name)
-            })
-        }
-        this.contacts.sort((a,b)=>{
-            return String(a.label).localeCompare(String(b.label));
-        });
-
-        this.recipientcontacts = this.contacts.map(e=>{return e.value});
     }
 
     addRecipient(event){
@@ -239,7 +311,28 @@ export default class EmailCommunication extends LightningElement {
         this.updateRecipientInfos();
     }
 
-    updateEmailContent(){
+    getAllToAddresses(){
+        let allAddress = [];
+        if (this.recipientcontacts){
+            allAddress = this.recipientcontacts.map(e=>{
+                let contactInfo = this.contacts.find(c =>{return c.value == e});
+                return {email:contactInfo.email, name:contactInfo.name, id:e, emailLabel:contactInfo.label};
+            });
+        }
+
+        let extendRecipients = this.recipients.filter(e=>{
+            let selector = this.template.querySelector(`[data-id="${e.id}"]`);
+            return selector && selector.recipient && selector.email;
+        }).map(e=>{
+            let selector = this.template.querySelector(`[data-id="${e.id}"]`);
+            return {email:selector.email, name:selector.name, id:getFieldValue(selector.recipient, FIELD_Id)};
+        });
+
+        allAddress.push(...extendRecipients);
+        return allAddress;
+    }
+
+    generateEmailInfo(){
         let fromContact = this.currentTeams.find((contact)=>{
             return contact.value == this.selectedFromContactId;
         });
@@ -248,24 +341,22 @@ export default class EmailCommunication extends LightningElement {
             console.error('Not any sender.');
             return;
         }
-        let toAddresses = this.contacts && this.contacts.map(e=>{
-            return {name:e.name, email:e.email, id: e.value};
-        });
-        let ccAddresses = this.ccemail && this.ccemail.split(';').map(e=>{
+        let toAddresses = this.getAllToAddresses();
+        let ccAddresses = this.ccemail && this.ccemail.split(';').filter(e=>e).map(e=>{
             let match = e.match(/<?([\w\d_\.]+@[\w\d_\.]+)>?/);
             if (match){
                 let name = e.substring(0,e.indexOf('<'));
                 return {name:name,email:match[1]}
             }
-            return {address:e}
+            return {email:e}
         });
-        let bccAddresses = this.bccemail && this.bccemail.split(';').map(e=>{
+        let bccAddresses = this.bccemail && this.bccemail.split(';').filter(e=>e).map(e=>{
             let match = e.match(/<?([\w\d_\.]+@[\w\d_\.]+)>?/);
             if (match){
                 let name = e.substring(0,e.indexOf('<'));
                 return {name:name,email:match[1]}
             }
-            return {address:e}
+            return {email:e}
         });
         let ce_EmailInfo = {
             personalizations:[{
@@ -282,8 +373,8 @@ export default class EmailCommunication extends LightningElement {
                 type:'text/html',
                 value:this.emailHtmlbody
             },
-            attachments:this.attractList,
-            natures:[this.emailNature],
+            attachments:this.attactmentList,
+            natures:this.emailNature?[this.emailNature]:[],
             htmlBody:this.emailHtmlbody,
             templateId:this.templateId,
             sensitive:this.sensitive,
@@ -296,9 +387,7 @@ export default class EmailCommunication extends LightningElement {
 
     render4Template(emailInfo, templateId){
         return new Promise((resolve, error)=>{
-            let toAddresses = this.contacts && this.contacts.map(e=>{
-                return {name:e.name, email:e.email, id: e.value};
-            });
+            let toAddresses = this.getAllToAddresses();
 
             // render template email
             if (templateId && toAddresses && toAddresses[0] && toAddresses[0].id){
@@ -316,7 +405,7 @@ export default class EmailCommunication extends LightningElement {
                     resolve(emailInfo);
                 }).catch(e=>{
                     this.handleError(e);
-                    this.showToast('Error', 'Reder email template failure.' + e, 'error');
+                    this.showToast(TOAST.ERROR.TITLE, 'Render email template failure.' + e, TOAST.ERROR.VARIANT);
                     error(emailInfo);
                 })
             }else{
@@ -325,46 +414,185 @@ export default class EmailCommunication extends LightningElement {
         })
     }
 
+    /**
+     * check email info input valid or not.
+     * @returns true/false
+     */
+    validInputBeforePreview(){
+        let errorMessages = [];
+
+        // to address
+        let allRecipients = this.getAllToAddresses();
+        if (!allRecipients || allRecipients.length == 0){
+            errorMessages.push('You must choose at least one recipient.');
+        }
+
+        // cc address
+        if (this.ccemail){
+            let ccRecipients = this.ccemail.split(';').filter(e=>e);
+            for(let ccRecipient of ccRecipients){
+                let match = ccRecipient.match(/<?([\w\d_\.]+@[\w\d_\.]+)>?/);
+                if (match){
+                    let name = ccRecipient.substring(0,ccRecipient.indexOf('<'));
+                    let emailAddr = match[1];
+                    let index = emailAddr.indexOf('@');
+                    let emailDomain = emailAddr.substring(index+1);
+                    if (CC_BCC_DOMAIN.indexOf(emailDomain) == -1){
+                        errorMessages.push(`${emailDomain} is not a valid cc email domain.`);
+                    }
+                    if (emailAddr.length > 255){
+                        errorMessages.push(`cc address exceeds 256 characters`);
+                    }
+                }else{
+                    errorMessages.push(`${ccRecipient} is not a valid email.`);
+                }
+            }
+
+        }
+
+        // bcc address
+        if (this.bccemail){
+            let bccRecipients = this.bccemail.split(';').filter(e=>e);
+            for(let bccRecipient of bccRecipients){
+                let match = bccRecipient.match(/<?([\w\d_\.]+@[\w\d_\.]+)>?/);
+                if (match){
+                    let name = bccRecipient.substring(0,bccRecipient.indexOf('<'));
+                    let emailAddr = match[1];
+                    let index = emailAddr.indexOf('@');
+                    let emailDomain = emailAddr.substring(index+1);
+                    if (CC_BCC_DOMAIN.indexOf(emailDomain) == -1){
+                        errorMessages.push(`${emailDomain} is not a valid cc email domain.`);
+                    }
+                    if (emailAddr.length > 256){
+                        errorMessages.push(`cc address exceeds 256 characters`);
+                    }
+                }else{
+                    errorMessages.push(`${ccRecipient} is not a valid email.`);
+                }
+            }
+
+        }
+
+        // attachment
+        if (this.attactmentList && this.attactmentList.length>0){
+            let totalSize = 0;
+            if (this.attactmentList.length>MAX_FILE_NUMBER){
+                errorMessages.push(`Attachements exceeds max ${MAX_FILE_NUMBER} files limit.`);
+            }
+            for(let attactment of this.attactmentList){
+                totalSize += attactment.size;
+                if (attactment.size > MAX_SINGLE_FILE_SIZE){
+                    errorMessages.push(`There is single file size ${Math.ceil(MAX_SINGLE_FILE_SIZE/(1024*1024))}MB upload limit.`);
+                }
+                
+            }
+            if (this.validFilesType(this.attactmentList.map(e=>{return {name:e.filename}}), FILE_TYPE)){
+                errorMessages.push(`Only [${FILE_TYPE.join(',')}] file can be supported.`);
+            }
+            if (totalSize > MAX_FILE_SIZE){
+                errorMessages.push(`Attachements exceeds ${Math.ceil(MAX_FILE_SIZE/(1024*1024))}MB limit.`);
+            }
+        }
+
+        // subject
+        if (!this.emailSubject){
+            errorMessages.push(`Subject can not be emtpy.`);
+        }else{
+            if (this.emailSubject.length > MAX_SUBJECT_LENGTH){
+                errorMessages.push(`Subject is too long.`);
+            }
+        }
+
+        // html body
+        if (!this.emailHtmlbody){
+            errorMessages.push(`HTML body can not be emtpy.`);
+        }else{
+            if (this.emailHtmlbody.length > MAX_HTMLBODY_LENGTH){
+                errorMessages.push(`HTML body is too long.`);
+            }
+        }
+
+        if (errorMessages.length){
+            //alert(errorMessage);
+            this.showToast(TOAST.ERROR.TITLE, errorMessages.join('\n'), TOAST.ERROR.VARIANT);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * generate email info to preview
+     * @param {*} event 
+     * @returns 
+     */
     handlePreview(event){
-        this.updateEmailContent();
-        this.render4Template(this.updateEmailContent(), this.templateId).then((emailInfo)=>{
+        if (!this.validInputBeforePreview()){
+            return;
+        }
+        this.render4Template(this.generateEmailInfo(), this.templateId).then((emailInfo)=>{
             this.showPreview = true;
         });
     }
 
+    /**
+     * click send email and call apex API callout
+     * @param {*} event 
+     */
     handleSendEmail(event){
         this.showPreview = false;
-        if (event.detail.status=='ok'){
-            this.updateEmailContent();
-            this.render4Template(this.updateEmailContent(), this.templateId).then((emailInfo)=>{
+        if (event.detail.status == BUTTON_STATUS_OK){
+            this.render4Template(this.generateEmailInfo(), this.templateId).then((emailInfo)=>{
                 sendEmail({emailInfoString:JSON.stringify(emailInfo)}).then((e)=>{
                     if(e!=null){
-                        this.showToast('Success', 'Send email success.', 'success');
+                        this.showToast(TOAST.SUCCESS.TITLE, 'Send email success.', TOAST.SUCCESS.VARIANT);
                     }else{
-                        this.showToast('Error', 'Send email failure.', 'error');
+                        this.showToast(TOAST.ERROR.TITLE, 'Send email failure.', TOAST.ERROR.VARIANT);
                     }
                 }).catch((e)=>{
+                    /**
+                     * eg:
+                     * {
+                            "status" : 500,
+                            "error": {
+                                "code": "CE_ERROR_001", #example
+                                "message": "Server connect timeout",
+                                "details": "SMTP Server connect timeout"
+                            },
+                            "timestamp": "2020-07-16T22:14:45.624+0800"
+                        }
+                     */
                     this.handleError(e);
-                    this.showToast('Error', 'Send email failure.clause:' + e, 'error');
+                    this.showToast(TOAST.ERROR.TITLE, this.error, TOAST.ERROR.VARIANT);
                 });
             });
             
         }
     }
 
+    /**
+     * close 'email preview' componment
+     */
     hiddenPreview(){
         this.showPreview = false;
         this.showEmailTemplate = false;
     }
 
+    /**
+     * close 'Email Template' dialog and update email info
+     * @param {*} event 
+     */
     handleTemplateSelectClose(event){
         this.showEmailTemplate = false;
-        if(event.detail.status == 'ok' && event.detail.templates){
+        if(event.detail.status == BUTTON_STATUS_OK && event.detail.templates){
             let templateList = event.detail.templates;
             this.insertEmailTemplate(templateList[0]);
         }
     }
 
+    /**
+     * update UI information when email tempalte was selected, include htmlbody, subject, attachments
+     * @param {*} template 
+     */
     insertEmailTemplate(template){
         this.templateId = template.Id;
         this.emailHtmlbody = template.HtmlValue || template.Body;
@@ -373,7 +601,7 @@ export default class EmailCommunication extends LightningElement {
         //this.whoId = this.whoId || null;
 
         if (template.fileattachments){
-            this.attractList = fileattachments.map(e=>{
+            this.attactmentList = fileattachments.map(e=>{
                 return {
                     base64Content:'',
                     filename:e.fileName,
@@ -382,17 +610,18 @@ export default class EmailCommunication extends LightningElement {
                 }
             })
         }else{
-            this.attractList = [];
+            this.attactmentList = [];
         }
         this.updateAttachmentPillItems();
 
         console.log('whatId: ' +this.whatId + ', whoId:' + this.whoId );
     }
 
-    callbackMessage(e){
-        console.log(e.detail);
-    }
-
+    /**
+     * add a attachment file when file was selected or drag
+     * @param {*} event 
+     * @returns 
+     */
     handleFilesChange(event){
         var files = event.target.files;
      
@@ -402,9 +631,21 @@ export default class EmailCommunication extends LightningElement {
             return;
         }
 
+        // not support same name file
+        let existsNames = this.attactmentList.map(attactment=>{
+            return attactment.filename;
+        })
+
+        for(let file of files){
+            if (existsNames.indexOf(file.name) != -1){
+                alert(`File ${file.name} already exists`);
+                return;
+            }
+        }
+
         // check upload files size
         if (this.validFilesSize(files, MAX_FILE_SIZE)){
-            alert("Total max size 30MB file.");
+            alert("Total max size 6MB file.");
             return;
         }
 
@@ -416,25 +657,34 @@ export default class EmailCommunication extends LightningElement {
 
         for (let file of files){
             this.readFilecontents(file).then((content)=>{
-                let attachmentInfo = {
-                    base64Content:content,
-                    filename:file.name,
-                    type:'pdf',
-                    fileId:'',
-                    size:file.size
-                };
-                this.attractList.push(attachmentInfo);
-                this.handleUploadFileChange(attachmentInfo, 'add');
-                this.showToast('Success', 'Upload file success.', 'success');
+                upload({fileName:file.name, fileContent:content}).then(resp=>{
+                    if (resp && resp.status == 0){
+                        let attachmentInfo = {
+                            base64Content:content,
+                            filename:file.name,
+                            type:'pdf',
+                            fileId:'',
+                            size:file.size,
+                            id: Math.floor(Math.random()*1000)
+                        };
+                        this.attactmentList.push(attachmentInfo);
+                        this.handleUploadFileChange(attachmentInfo, 'add');
+                        this.showToast(TOAST.SUCCESS.TITLE, 'Upload file success.', TOAST.SUCCESS.VARIANT);
+                    }else if (resp){
+                        this.showToast(TOAST.ERROR.TITLE, resp.message, TOAST.ERROR.VARIANT);
+                    }
+                }).catch(e=>{
+                    this.showToast(TOAST.ERROR.TITLE, e, TOAST.ERROR.VARIANT);
+                });
             }).catch(e=>{
-                this.showToast('Error', e, 'error');
+                this.showToast(TOAST.ERROR.TITLE, e, TOAST.ERROR.VARIANT);
             });
         }
     }
 
     validFilesSize(files, totalMaxFileSize){
         let totalUploadSize = 0;
-        this.attractList.forEach(e=>{
+        this.attactmentList.forEach(e=>{
             totalUploadSize += (e.size || 0);
         });
         for(let file of files){
@@ -473,21 +723,28 @@ export default class EmailCommunication extends LightningElement {
         })
     }
 
+    /**
+     * remove attachment file
+     * @param {*} event 
+     */
     handleFileItemRemove(event){
-        var name = event.detail.item.label;
-        let attachmentInfo = this.attractList.find(item=>{
-            return item.filename == name;
+        var attactmentId = event.detail.item.id;
+        let attachmentInfo = this.attactmentList.find(item=>{
+            return item.id == attactmentId;
         });
-        this.attractList = this.attractList.filter(item=>{
-            return item.filename != name;
+        this.attactmentList = this.attactmentList.filter(item=>{
+            return item.id != attactmentId;
         });
         
         this.handleUploadFileChange(attachmentInfo, 'remove');
     }
 
+    /**
+     * do something code when add or remove attachment file
+     */
     handleUploadFileChange(attachmentInfo, action){
         this.updateAttachmentPillItems();
-        this.showAttachmentPill = this.attractList.length > 0;
+        this.showAttachmentPill = this.attactmentList.length > 0;
 
         this.dispatchEvent(
             new CustomEvent(
@@ -503,11 +760,15 @@ export default class EmailCommunication extends LightningElement {
         );
     }
 
+    /**
+     * update UI items when attachment file change
+     */
     updateAttachmentPillItems(){
-        this.attachmentPillItems = this.attractList.map(e=>{
+        this.attachmentPillItems = this.attactmentList.map(e=>{
             let icon = e.filename.indexOf('.pdf')==-1 ?'doctype:pdf':'doctype:image';
             return {
                 type: 'avatar',
+                id: e.id,
                 href: 'javascript:void(0);',
                 label: e.filename,
                 name: e.filename,
@@ -532,5 +793,4 @@ export default class EmailCommunication extends LightningElement {
             })
         );
     }
-
 }

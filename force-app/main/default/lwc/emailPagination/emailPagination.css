@@ -1,0 +1,16 @@
+
+@media (min-width: 48em) {
+    .ce-pagination-block-links_space span, .ce-pagination-block-links_space a{
+        padding:var(--lwc-spacingXSmall,0.5rem)
+    }
+}
+
+.slds-has-inline-block-links a {
+    display: inline-block;
+    text-decoration: none
+}
+
+.ce-pagination-block-links_space span, .ce-pagination-block-links_space a{
+    display: inline-block;
+    text-decoration: none;
+}

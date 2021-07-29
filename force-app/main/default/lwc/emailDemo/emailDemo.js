@@ -10,9 +10,17 @@ import CONTACT_OBJECT from '@salesforce/schema/Contact';
 import USER_OBJECT from '@salesforce/schema/User';
 import LEAD_OBJECT from '@salesforce/schema/Lead';
 import CASE_OBJECT from '@salesforce/schema/Case';
+import FIELD_NAME from '@salesforce/schema/Contact.Name';
+import FIELD_ID from '@salesforce/schema/Contact.Id';
+import FIELD_EMAIL from '@salesforce/schema/Contact.Email';
 
 
+import getEmailTemplates from '@salesforce/apex/EmailCommunicationController.getEmailTemplates';
+import searchRecordList from '@salesforce/apex/EmailCommunicationController.searchRecordList';
+import FolderName from '@salesforce/schema/Report.FolderName';
 
+
+const FIELDS = [FIELD_NAME, FIELD_ID, FIELD_EMAIL];
 
 export default class EmailDemo extends LightningElement {
    
@@ -30,7 +38,17 @@ export default class EmailDemo extends LightningElement {
     uilistInfo;
     recordInfos = {};
 
+    
+    accountrecordid;
+
     objectApiNames = [ACCOUNT_OBJECT,USER_OBJECT, CASE_OBJECT];
+
+    options = {template:{
+                            filters: [{
+                                folderName:'CE Test Folder'
+                            }]
+                        }  
+              };
 
     @wire(getListInfoByName, {
         objectApiName: ACCOUNT_OBJECT.objectApiName,
@@ -139,6 +157,10 @@ export default class EmailDemo extends LightningElement {
             this.whoId = event.detail.value;
             this.whatId= undefined;
         }
+
+        if (this.apiName == 'Account'){
+            this.accountrecordid = event.detail.value;
+        }
     }
 
     updateWhatItems(){
@@ -169,6 +191,83 @@ export default class EmailDemo extends LightningElement {
             event.detail.files.forEach(element => {
                 console.log('demo add attachment file:' +JSON.stringify(element));
             });
+        }
+    }
+
+    filterVars;
+
+    //getRecordList(ObjectRecordApi objectApi, FieldRecordApi[] fields, FieldRecordApi[] filterVars, Integer offset, Integer limits)
+    @wire(searchRecordList, {objectApi: CONTACT_OBJECT, fields:FIELDS, filterVars:'$filterVars', offset:0, limits:100})
+    wire_getRecordList({error, data}){
+        this.contactList = [];
+        this.total = 0;
+        if (data){
+            console.log('query contacts:');
+            
+            (data.result || []).forEach(e=>{
+                console.log(JSON.stringify(e));
+                this.contactList.push(JSON.parse(JSON.stringify(e)));
+            });
+            this.total = data.count;
+            this.renderDropItems();
+            console.log(data.count);
+        }else if (error){
+            this.error = error;
+        }
+    }
+
+
+    contactList = [];
+    pageSize = 10;
+    filterVar = '';
+    total = 0;
+    testItem = [];
+    _testDefaultItem = [];
+
+    @wire(getEmailTemplates, {offset: 0, limits:'$pageSize', filterVar:'$filterVar'})
+    wire_allContacts({error, data}){
+        this.contactList = [];
+        if (data){
+            data.result.forEach(e=>{
+                this.contactList.push(JSON.parse(JSON.stringify(e)));
+            });
+            this.total = data.count;
+            this.renderDropItems();
+        }else if (error){
+            this.error = error;
+        }
+    }
+    handleShowMore(event){
+        this.pageSize = this.pageSize + 10;
+    }
+    purposeContactChange(event){
+        let filter = event.detail.value;
+        if (!filter) {
+            this.renderDropItems();
+            return;
+        }
+        this.pageSize = 10;
+        
+        let emails = filter.split(';');
+        if (emails.length > 0){
+            let searchVar = emails[emails.length-1];
+            this.filterVars = [{value:searchVar, fieldApiName:FIELD_EMAIL.fieldApiName}];
+        }else{
+            this.filterVars = [{value:'', fieldApiName:FIELD_EMAIL.fieldApiName}];
+        }
+
+    }
+
+    renderDropItems(){
+        if (!this.filterVar){
+            //this.testItem = this._testDefaultItem;
+        }else{
+        }
+        this.testItem = (this.contactList || []).map((e, index)=>{
+            return {label:index + ' ' + e.Name, value:e.Name,icon:'standard:account',selectable:true, input:e.Email};
+        })
+        if (this.total>this.testItem.length){
+            this.testItem.push({label:'Show More...', value:'ShowMore',icon:'',selectable:false, checkable: false})
         }
     }
 }

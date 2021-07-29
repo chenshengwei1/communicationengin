@@ -19,13 +19,25 @@
                 <!-- Modal/Popup Box LWC body starts here -->
                 <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
                     <div>
+                        <lightning-card title="Filter" icon-name="utility:search" variant="Narrow">
+                            <lightning-layout>
+                                <lightning-layout-item padding="around-small" size="4">
+                                    <lightning-input type="text" name="searchName" value={name} label="Name" onchange={search}>
+                                    </lightning-input>
+                                </lightning-layout-item>
+                            </lightning-layout>
+                        </lightning-card>
+
                         <lightning-datatable
-                                key-field="id"
-                                data={templateList}
-                                columns={columns}
-                                max-row-selection="1"
-                                onrowselection={updateSelectedText}>
+                            key-field="id"
+                            data={templateList}
+                            columns={columns}
+                            max-row-selection="1"
+                            onrowselection={updateSelectedText}>
                             </lightning-datatable>
+                        <div class="slds-m-top_large">
+                            <c-email-pagination total={totalRecord} onpagechange={changePage}></c-email-pagination>
+                        </div>
                     </div>
                 </div>
                 <!-- Modal/Popup Box LWC footer starts here -->

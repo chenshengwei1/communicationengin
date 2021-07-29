@@ -39,23 +39,42 @@ export default class EmailTemplateSelect extends LightningElement {
         {label: 'Description', fieldName: 'Description', type: 'percentage'}
         ];
 
+    pageSize = 10;
+    start = 0;
+    totalRecord = 0;
+    name = '';
+
     @track
     templateList = [];
 
-    @wire(getEmailTemplates)
+    @api
+    forderNames = [];
+
+    @wire(getEmailTemplates, {offset:'$start', limits:'$pageSize', filterVar:'$name', folderNames:'$forderNames'})
     wire_allContacts({error, data}){
-        this.contactList = [];
+        this.templateList = [];
         if (data){
-            data.forEach(e=>{
+            data.result.forEach(e=>{
                 this.templateList.push(JSON.parse(JSON.stringify(e)));
             });
+            this.totalRecord = data.count;
         }else if (error){
             this.error = error;
         }
     }
 
+
+
+    search(event){
+        this.name =  event.detail.value;
+    }
+
     updateSelectedText(event){
         this.selectedRows = event.detail.selectedRows;
-        console.log(JSON.stringify(event.detail));
+    }
+
+    changePage(event){
+        this.pageSize =  event.detail.pageSize;
+        this.start = event.detail.start;
     }
 }

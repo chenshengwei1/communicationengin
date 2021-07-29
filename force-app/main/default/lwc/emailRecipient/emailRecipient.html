@@ -1,10 +1,17 @@
 <template>
     <div class="slds-m-top_xx-small slds-p-around_small hlds-email-recipient--backgroud">
-
         <div class="slds-grid" if:true={recipient}>
             <div class="slds-col readonlyborder">
-                <lightning-input variant="label-hidden" type="email" name="email1" value={email} label="Email field with predefined value" onchange={handleChangeEmail} readonly={emailReadonly}>
+                <lightning-input variant="label-hidden" type="text" name="email1" value={email} label="Email field with predefined value" 
+                onchange={handleChangeEmail} disabled={contactSubmited}>
                 </lightning-input>
+
+                <!-- <c-email-recipient-input label="Recipient" 
+                    variant="label-hidden"
+                    onitemchange={purposeContactChange}
+                    oninputchange={purposeContactChange}
+                    is-show-selected-value="true" 
+                    value={email}></c-email-recipient-input> -->
             </div>
             <div class="slds-col slds-grow-none">
                 <lightning-button-group>
@@ -15,10 +22,10 @@
         </div>
         <div if:true={contactOpen} class="slds-m-top_xx-small">
             <div if:true={newContactPerson} class="slds-m-top_xx-small"> 
-                <c-email-person-point-new onchangecontactinfo={handleNewContact}></c-email-person-point-new>
+                <c-email-person-point-new new-email={_email} onchangecontactinfo={handleChangeContactInfo}></c-email-person-point-new>
             </div>
             <div if:false={newContactPerson} class="slds-m-top_xx-small">
-                <c-email-person-point-edit contact-person={selectedRecipient} onchangecontactinfo={handleChangeContactInfo} onchangecontact={handleContact}></c-email-person-point-edit>
+                <c-email-person-point-edit new-email={_email} contact-person={selectedRecipient} onchangecontactinfo={handleChangeContactInfo} onchangecontact={handleContact}></c-email-person-point-edit>
             </div>
             
         </div>

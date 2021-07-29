@@ -1,8 +1,8 @@
 <template>
     <div class="slds-grid slds-grid_vertical-align-center">
         <div class="slds-col slds-grow-none slds-p-around_xx-small">
-            <lightning-icon size="xx-small"  icon-name="utility:chevrondown" if:true={expand} onclick={changeExpand}></lightning-icon>
-            <lightning-icon size="xx-small"  icon-name="utility:chevronright" if:false={expand} onclick={changeExpand}></lightning-icon>
+            <lightning-icon size="xx-small"  icon-name="utility:chevrondown" if:true={_expand} onclick={changeExpand}></lightning-icon>
+            <lightning-icon size="xx-small"  icon-name="utility:chevronright" if:false={_expand} onclick={changeExpand}></lightning-icon>
             <span>New Contact Point</span>
         </div>
         <div class="slds-col">
@@ -12,7 +12,7 @@
         </div>
     </div>
 
-    <lightning-layout if:true={expand} multiple-rows="true" class="slds-m-left_small">
+    <lightning-layout if:true={_expand} multiple-rows="true" class="slds-m-left_small">
         <lightning-layout-item size="12">
             <lightning-input type="text" required="true" name="email1" value={editContactPerson.purpose} label="Purpose of Contact" onchange={changePurpose}>
             </lightning-input>
@@ -32,8 +32,8 @@
             <div class="slds-grid bottomBar">
                 <div class="bottomBarRight slds-col--bump-left">
                     <lightning-button-group>
-                        <lightning-button label="Cancel" onclick={handlerCancel}></lightning-button>
-                        <lightning-button variant="brand" label="Submit" onclick={handleSubmit} disabled={allowSubmit}></lightning-button>
+                        <lightning-button label="Cancel" onclick={handleButtonClick} name="cancel"></lightning-button>
+                        <lightning-button variant="brand" label="Submit" onclick={handleButtonClick} disabled={disableSubmitBtn} name="ok"></lightning-button>
                     </lightning-button-group>
                 </div>
             </div>

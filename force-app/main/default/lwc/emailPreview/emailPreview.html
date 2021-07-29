@@ -32,24 +32,24 @@
                             <li class="slds-item no-top-line">
                                 <dl class="slds-list_horizontal slds-wrap">
                                     <dt class="slds-item_label slds-text-color_weak slds-truncate" title="From">From:</dt>
-                                    <dd class="slds-item_detail slds-truncate">{from}</dd>
+                                    <dd class="slds-item_detail">{from}</dd>
 
                                     <dt class="slds-item_label slds-text-color_weak slds-truncate" title="To">To:</dt>
-                                    <dd class="slds-item_detail slds-truncate">
+                                    <dd class="slds-item_detail">
                                         <template for:each={toAddrs} for:item="to">
                                             <div key={to.name}>{to.label}</div>
                                         </template>
                                     </dd>
 
                                     <dt class="slds-item_label slds-text-color_weak slds-truncate" title="CC">CC:</dt>
-                                    <dd class="slds-item_detail slds-truncate">
+                                    <dd class="slds-item_detail">
                                         <template for:each={ccAddrs} for:item="cc">
                                             <div key={cc.name}>{cc.label}</div>
                                         </template>
                                     </dd>
 
                                     <dt class="slds-item_label slds-text-color_weak slds-truncate" title="BCC">BCC:</dt>
-                                    <dd class="slds-item_detail slds-truncate">
+                                    <dd class="slds-item_detail">
                                         <template for:each={bccAddrs} for:item="bcc">
                                             <div key={bcc.name}>{bcc.label}</div>
                                         </template>
@@ -59,7 +59,7 @@
                             <li class="slds-item" if:true={nature}>
                                 <dl class="slds-list_horizontal slds-wrap">
                                     <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Sensitive">Nature:</dt>
-                                    <dd class="slds-item_detail slds-truncate">
+                                    <dd class="slds-item_detail">
                                         {nature}
                                     </dd>
                                 </dl>
@@ -67,7 +67,7 @@
                             <li class="slds-item" if:true={subject}>
                                 <dl class="slds-list_horizontal slds-wrap">
                                     <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Sensitive">Subject:</dt>
-                                    <dd class="slds-item_detail slds-truncate">
+                                    <dd class="slds-item_detail">
                                         {subject}
                                     </dd>
                                 </dl>
@@ -75,8 +75,9 @@
                             <li class="slds-item" if:true={htmlBody}>
                                 <dl class="slds-list_horizontal slds-wrap">
                                     <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Sensitive">Body Message:</dt>
-                                    <dd class="slds-item_detail slds-truncate">
-                                        
+                                    <dd class="slds-item_detail">
+                                        <div class="">
+                                        </div>
                                         <lightning-formatted-rich-text value={htmlBody}></lightning-formatted-rich-text>
                                     </dd>
                                 </dl>
@@ -84,7 +85,7 @@
                             <li class="slds-item" if:true={sensitive}>
                                 <dl class="slds-list_horizontal slds-wrap">
                                     <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Sensitive">Sensitive:</dt>
-                                    <dd class="slds-item_detail slds-truncate">
+                                    <dd class="slds-item_detail">
                                         {sensitive}
                                     </dd>
                                 </dl>
@@ -92,7 +93,7 @@
                             <li class="slds-item" if:true={attachmentPillItems}>
                                 <dl class="slds-list_horizontal slds-wrap">
                                     <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Attachment">Attachment:</dt>
-                                    <dd class="slds-item_detail slds-truncate">
+                                    <dd class="slds-item_detail ">
                                         <lightning-pill-container items={attachmentPillItems}>
                                         </lightning-pill-container>
                                     </dd>

@@ -1,0 +1,28 @@
+<template>
+    <div class="slds-grid slds-has-block-links_space ce-pagination-block-links_space">
+        <div>
+            <span>Total:</span>
+        </div>
+        <div>
+            <span class="slds-text-color_success slds-m-left_large">{total}</span>
+        </div>
+        <div class="slds-col_bump-left">
+        </div>
+        <div>
+            <lightning-combobox name="instructor" label="page size" variant="label-hidden"
+                options={pageOptions} value={pageSize}
+                class="slds-m-right_large"
+                onchange={turnPageSize}>
+            </lightning-combobox>
+        </div>
+        <div>
+            <a href="#" onclick={gotoPrevious}>&lt;Previous</a>
+        </div>
+        <div class="slds-m-left_large">
+            <span class="ce-center">{currentPage}</span>
+        </div>
+        <div class="slds-m-left_large">
+            <a href="#" onclick={gotoNext}>Next&gt;</a>
+        </div>
+    </div>
+</template>

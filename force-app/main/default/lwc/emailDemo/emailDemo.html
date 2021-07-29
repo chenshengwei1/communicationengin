@@ -1,7 +1,7 @@
 <template>
     <div class="slds-m-bottom_small">
         <lightning-card title="Filter What" icon-name="utility:search" variant="Narrow">
-            <lightning-layout horizontal-align="center">
+            <lightning-layout  multiple-rows="true">
                 <lightning-layout-item padding="around-small" size="4">
                     <lightning-combobox name="instructor" label="Related To"
                         options={whatItems} value={apiName}
@@ -15,12 +15,18 @@
                 </lightning-layout-item>
 
                 <!-- add new delivery-->
-                <lightning-layout-item padding="around-small" size="4">
+                <lightning-layout-item padding="around-small" size="12">
                     <lightning-button label="Add New Delivery" variant="brand">
                     </lightning-button>
+                </lightning-layout-item>
+                <lightning-layout-item padding="around-small" size="12">
+                    <c-email-searchable-input options={testItem} label="Test Recipient" onpurposecontactchange={purposeContactChange}
+                    oninputchange={purposeContactChange}
+                    is-show-selected-value="true" 
+                    onshowmore={handleShowMore}></c-email-searchable-input>
                 </lightning-layout-item>
             </lightning-layout>
         </lightning-card>
     </div>
-    <c-email-communication what-id={whatId} who-id={whoId} onuploadfile={handleUploadFile}></c-email-communication>
+    <c-email-communication what-id={whatId} who-id={whoId} onuploadfile={handleUploadFile} account-record-id={accountrecordid} options={options}></c-email-communication>
 </template>

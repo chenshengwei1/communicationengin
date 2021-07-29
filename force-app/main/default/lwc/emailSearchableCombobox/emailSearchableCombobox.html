@@ -12,13 +12,13 @@
                             aria-controls="popover-unique-id-234" autocomplete="off" role="textbox" data-id="comboboxInputId"
                             placeholder={placeholder} readonly="" onclick={handleMultiselect} onkeypress={blockKeyPres}
                             value={inputValues} onkeydown={blockKeyPres}/> -->
-
-                        <lightning-input class="box-color" onblur={handleFocusChange}
+                        <lightning-input class="box-color" onblur={handleFocusChange} aria-activedescendant="option1"
                         variant="label-hidden"
-                        title={inputValues}
                         aria-controls="popover-unique-id-234" data-id="comboboxInputId"
                         placeholder={placeholder} onclick={handleMultiselect} onkeypress={blockKeyPres}
-                        value={inputValues} onkeydown={blockKeyPres} disabled={disabled} readonly="true"
+                        value={inputValues} onkeydown={blockKeyPres} disabled={disabled}
+                        onfocus={handleFocus}
+                        onchange={handleChangeInput}
                         required={required}>
                             
                         </lightning-input>
@@ -47,12 +47,19 @@
                             <fieldset class="slds-form-element">
                                 <div class="slds-form-element__control">
                                     <template for:each={options} for:item="option">
-                                        <div class="slds-checkbox listbox setCursor" key={option.value} onclick={handleChange} data-value={option.value}>
-                                            <template if:true={option.selected}>
+                                        <div aria-selected={option.selected} class="slds-checkbox listbox setCursor" key={option.value} onclick={handleChange} data-value={option.value}>
+                                            <!-- <template if:true={option.selected}>
                                                 <lightning-icon class="slds-p-right--xx-small slds-p-left--xx-small" icon-name="utility:check" alternative-text="Check" title="Check" size="xx-small"></lightning-icon>
                                             </template>
                                             <template if:false={option.selected}>
                                                 <div class="emptyBlock"></div>
+                                            </template> -->
+                                            <template if:true={option.icon}>
+                                                <span class="slds-media__figure slds-listbox__option-icon">
+                                                    <span class="slds-icon_container slds-icon-standard-account">
+                                                        <lightning-icon icon-name={option.icon} size={option.size}></lightning-icon>
+                                                    </span>
+                                                </span>
                                             </template>
                                             <label class="slds-checkbox__label setCursor" >
                                                 <span class="slds-form-element__label">{option.label}</span>
@@ -65,7 +72,6 @@
                     </section>
                 </div>
             </div>
-            
         </div>
     </div>
 </template>
